@@ -12,13 +12,11 @@ const blogSchema = new mongoose.Schema({
   tags: { type: [String], default: [] },
   category: { type: String, required: true },
   subcategory: { type: [String], default: [] },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
   deletedAt: { type: Date },
   isDeleted: { type: Boolean, default: false },
   publishedAt: { type: Date},
   isPublished: { type: Boolean, default: false },
-});
+},{timestamps:true});
 
 const Blog = mongoose.model('Blog', blogSchema);
 
