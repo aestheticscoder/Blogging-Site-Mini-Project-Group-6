@@ -6,7 +6,20 @@ const authorSchema = new mongoose.Schema({
   fname: { type: String, required: true },
   lname: { type: String, required: true },
   title: { type: String, enum: ['Mr', 'Mrs', 'Miss'], required: true },
-  email: { type: String, required: true, unique: true , lowercase: true},
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    validate: {
+      validator: function (value) {
+        // Regular expression to validate email format
+        const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+        return emailRegex.test(value);
+      },
+      message: 'Invalid email address',
+    },
+  },
   password: { type: String, required: true },
 });
 
