@@ -1,19 +1,13 @@
 const Author = require("..//Models/authorModel");
 
+// Create an author - atleast 5 authors
+// Create a author document from request body.
+
 // Create a new author
 const createAuthor = async (req, res) => {
     try {
-      const { fname, lname, title, email, password } = req.body;
-      
-      const author = new Author({
-        fname,
-        lname,
-        title,
-        email,
-        password
-      });
-  
-      const createdAuthor = await author.save();
+      const data = req.body;
+      const createdAuthor = await Author.create(data);
       res.status(201).json(createdAuthor);
     } catch (error) {
       res.status(400).json({ status :false,message: error.message });
@@ -30,7 +24,5 @@ const getAllAuthors = async (req, res) => {
   }
 };
 
-module.exports = {
-  createAuthor,
-  getAllAuthors,
-};
+module.exports.createAuthor = createAuthor
+module.exports.getAllAuthors = getAllAuthors
