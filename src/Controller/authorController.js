@@ -9,7 +9,7 @@ const createAuthor = async (req, res) => {
         fname,
         lname,
         title,
-        email,
+        email:email.toLowerCase(),
         password
       });
   

@@ -6,12 +6,12 @@ const authorSchema = new mongoose.Schema({
   fname: { type: String, required: true },
   lname: { type: String, required: true },
   title: { type: String, enum: ['Mr', 'Mrs', 'Miss'], required: true },
-  // email: { type: String, required: true, unique: true , lowercase: true},
+  // email: { type: String, required: true, unique: true, lowercase: true },
   email: {
     type: String,
     required: true,
     unique: true,
-    lowercase: true,
+    // lowercase: true,
     validate: {
       validator: function (value) {
         // Regular expression to validate email format
