@@ -206,3 +206,20 @@ const createBlog = async (req, res) => {
     }
   };
   
+
+  
+//   const login =  async(req,res)=>{
+//     try{const data = req.body
+//     if(!data) return res.status(400).send({status :false, message : 'invalid credential'})
+//       const author = await Author.findOne(data)
+//       if(!author){
+//         return res.status(401).send({status : false, message : "unauthenticated"})
+
+//       }
+//       const token = jwt.sign({email : data.email, authorId : author._id},"group6priyankaravinarottamvishal")
+
+//       res.setHearder("x-api-key",token)
+//       res.status(200).send({status : true, message:"logined successfully"})
+           
+// }catch(err){res.status(500).send({status:false,message:err.message})}
+//   }
