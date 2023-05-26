@@ -16,7 +16,15 @@ const createAuthor = async (req, res) => {
       const createdAuthor = await author.save();
       res.status(201).json(createdAuthor);
     } catch (error) {
-      res.status(400).json({ status :false,message: error.message });
+      let errMsg;
+      if (error.code == 11000) {
+        errMsg = Object.keys(error.keyValue)[0] + " already exists.";
+      } else {
+        errMsg = error.message;
+      }
+      res.status(400).json({ status: false, message: errMsg })
+      // res.status(400).json({ status :false,message: error });
+      // console.log(error.name)
     }
   };
 
