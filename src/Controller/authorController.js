@@ -3,26 +3,29 @@ const jwt = require('jsonwebtoken')
 // Create a new author
 const createAuthor = async (req, res) => {
     try {
-      const { fname, lname, title, email, password } = req.body;
-      
+      let { fname, lname, title, email, password } = req.body;
+      if(!fname || !lname ||  !email || !password) return res.status(400).send({status : false , message : "missing mandatory fields"})
+       email = email.toLowerCase()
+       
+       //checking unqiue email should be there
+
+       const authorData = await Author.findOne({email : email})
+
+       if(authorData)   return res.status(400).send({status : false , message : "email already exists"})
+
       const author = new Author({
         fname,
         lname,
         title,
-        email:email.toLowerCase(),
+        email,
         password
       });
   
       const createdAuthor = await author.save();
       res.status(201).json(createdAuthor);
     } catch (error) {
-      let errMsg;
-      if (error.code == 11000) {
-        errMsg = Object.keys(error.keyValue)[0] + " already exists.";
-      } else {
-        errMsg = error.message;
-      }
-      res.status(400).json({ status: false, message: errMsg })
+      
+      res.status(500).json({ status: false, message: error.message })
       // res.status(400).json({ status :false,message: error });
       // console.log(error.name)
     }
@@ -32,7 +35,7 @@ const createAuthor = async (req, res) => {
 const loginAuthor= async (req, res) => {
  try{
         let data = req.body
-        if(!data) return res.status(400).send({status :false, message : "invalid email or password"})
+        if(!data.authorEmail||!data.password) return res.status(400).send({status :false, message : "invalid email or password"})
   let authorEmail= data.email
   let password= data.password
 

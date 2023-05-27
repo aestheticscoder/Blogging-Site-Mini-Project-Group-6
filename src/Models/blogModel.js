@@ -6,12 +6,29 @@ const mixedId =  mongoose.Schema.Types.mixed;
 
 
 const blogSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  body: { type: String, required: true },
-  authorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Author', required: true },
-  tags: { type: [String], default: [] },
-  category: { type: String, required: true },
-  subcategory: { type: [String], default: [] },
+  title: { type: String,
+     required: true
+     },
+  body: { type: String, 
+    required: true
+   },
+  authorId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Author',
+     required: true 
+    },
+  tags: { 
+    type: [String], 
+    default: [] 
+  },
+  category: { 
+    type: String,
+     required: true
+     },
+  subcategory: { 
+    type: [String], 
+    default: [] 
+  },
   deletedAt: { type: Date },
   isDeleted: { type: Boolean, default: false },
   publishedAt: { type: Date},
