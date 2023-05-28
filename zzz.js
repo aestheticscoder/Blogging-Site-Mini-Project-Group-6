@@ -11,10 +11,32 @@ const createBlog = async (req, res) => {
   return res.status(400)
   .send({status : false , message : "missing mandatory fields"})
 
-  data.authorId = req["x-api-key"].authorId;
+  data.authorId = req.access_token.authorId;
+
+  // if(data.authorId!=req.access_token.authorId)  
+  // return res.status(403)
+  // .send({status : false , message : "unauthorized"})
+
+  //validate authorId 
+  // const isValidId = mongoose.isValidObjectId(data.authorId);
+  // if (!isValidId) {
+  // return res.status(400).json({
+  // status: false, message: "Invalid authorId" 
+  // });
+  // }
+
+  // Check if the authorId exists or not
+  // const author = await authorModel.findById(data.authorId)
+  // if (!author) {
+  // return res.status(400).json({
+  // status: false,
+  // message: "author with this id doesn't exists",
+  // });
+  // }
 
   const createdBlog = await blogModel.create(data);
-
+  // createBlog.authorId= req.access_token.authorId
+  // const saved= createBlog.save()
   res.status(201).json({
   status: true, data: createdBlog });
   }catch (error) {
@@ -91,7 +113,7 @@ const updateBlog = async (req, res) => {
   
   // checking the decoded token's authorId and blog's authorId is same or not    
   //:- checking authorization
-  if(req["x-api-key"].authorId!=blog.authorId) 
+  if(req.access_token.authorId!=blog.authorId) 
   return res.status(403).send({
   status:false , message: "unauthorized"})
 
@@ -156,7 +178,7 @@ status : false , message: "Blog not found" });
 }
 
 // checking rights of author  for deletion
-if(blog.authorId!=req["x-api-key"].authorId)  
+if(blog.authorId!=req.access_token.authorId)  
 return res.status(403).send({
 status : false , message : "unauthorized"})
 
@@ -219,7 +241,7 @@ const deleteBlogsByQuery = async (req, res) => {
   if(!blogData) return res.status(404)
   .json({status: false, msg: "blog not exist"})
        
-  if(blogData.authorId!=req["x-api-key"].authorId)  
+  if(blogData.authorId!=req.access_token.authorId)  
   return res.status(403).send({
   status : false , message : "unauthorized"})
     
@@ -237,10 +259,10 @@ const deleteBlogsByQuery = async (req, res) => {
 };
 
 
-module.exports = {
-createBlog,
-getAllBlogs,
-updateBlog,
-deleteBlog,
-deleteBlogsByQuery
-};
+// module.exports = {
+// createBlog,
+// getAllBlogs,
+// updateBlog,
+// deleteBlog,
+// deleteBlogsByQuery
+// };
