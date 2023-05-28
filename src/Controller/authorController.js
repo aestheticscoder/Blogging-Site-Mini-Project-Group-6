@@ -66,7 +66,7 @@ const loginAuthor= async (req, res) => {
   )
  
   res.setHeader("x-api-key", token)
-  res.status(200).json({status: true, data: token})
+  res.status(200).json({status: true, data:{token : token}})
  }catch (err) {
 res.status(500).send({
 status : false, message : err.message})

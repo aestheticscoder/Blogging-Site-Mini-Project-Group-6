@@ -1,25 +1,30 @@
-const blogModel= require('../Models/blogModel')
-const authorModel= require('../Models/authorModel')
-const mongoose= require('mongoose')
+const blogModel = require("../Models/blogModel");
+
+const mongoose = require("mongoose");
 
 const createBlog = async (req, res) => {
   try {
-  const data = req.body;
+    const data = req.body;
 
-  // required fields must be validated.
-  if(!data.title || !data.body || !data.category ) 
-  return res.status(400)
-  .send({status : false , message : "missing mandatory fields"})
+    // required fields must be validated.
+    if (!data.title || !data.body || !data.category)
+      return res
+        .status(400)
+        .send({ status: false, message: "missing mandatory fields" });
 
-  data.authorId = req["x-api-key"].authorId;
+    data.authorId = req["x-api-key"].authorId;
 
-  const createdBlog = await blogModel.create(data);
+    const createdBlog = await blogModel.create(data);
 
-  res.status(201).json({
-  status: true, data: createdBlog });
-  }catch (error) {
-  res.status(500).json({ 
-  status:false, message: error.message });
+    res.status(201).json({
+      status: true,
+      data: createdBlog,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      message: error.message,
+    });
   }
 };
 
@@ -27,44 +32,53 @@ const createBlog = async (req, res) => {
 
 const getAllBlogs = async (req, res) => {
   try {
-  const { authorId, category, tags, subcategory } = req.query;
-  const filters = { isDeleted: false, isPublished: true };
+    const { authorId, category, tags, subcategory } = req.query;
+    const filters = { isDeleted: false, isPublished: true };
 
-  if (authorId) {
-  const isValidId = mongoose.isValidObjectId(authorId);
-  if (!isValidId) {
-  return res.status(400).json({ 
-  status: false, message: "Invalid authorId"});
-  }
-  
-  filters.authorId = authorId;
-  }
+    if (authorId) {
+      const isValidId = mongoose.isValidObjectId(authorId);
+      if (!isValidId) {
+        return res.status(400).json({
+          status: false,
+          message: "Invalid authorId",
+        });
+      }
 
-  if (category) {
-  filters.category = category;
-  }
+      filters.authorId = authorId;
+    }
 
-  if (tags) {
-  filters.tags =  {$in:  tags.split(",") };
-  }
-   
-  if (subcategory) {
-  filters.subcategory = { $in: subcategory.split(",") };
-  }
+    if (category) {
+      filters.category = category;
+    }
 
-  const blogs = await blogModel.find(filters);
-  // if with that filter we didn't get any 
-  //doucment in find query we get an empty array
-  if (blogs.length === 0) {
-  return res.status(404).json({ 
-  status: false, message: "No blogs found" });
-  }
+    if (tags) {
+      filters.tags = { $in: tags.split(",") };
+    }
 
-  res.status(200).json({ 
-  status: true, message: "Blogs list", data: blogs });
+    if (subcategory) {
+      filters.subcategory = { $in: subcategory.split(",") };
+    }
+
+    const blogs = await blogModel.find(filters);
+    // if with that filter we didn't get any
+    //document in find query we get an empty array
+    if (blogs.length === 0) {
+      return res.status(404).json({
+        status: false,
+        message: "No blogs found",
+      });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Blogs list",
+      data: blogs,
+    });
   } catch (error) {
-  res.status(500).json({ 
-  status: false, message: error.message });
+    res.status(500).json({
+      status: false,
+      message: error.message,
+    });
   }
 };
 
@@ -72,175 +86,203 @@ const getAllBlogs = async (req, res) => {
 
 const updateBlog = async (req, res) => {
   try {
-  const blogId = req.params.blogId;
+    const blogId = req.params.blogId;
 
-  // Check if the blogId is valid
-  const isValidId = mongoose.isValidObjectId(blogId);
-  if (!isValidId) {
-  return res.status(400).json({ 
-  status: false, message: "Invalid blogId" });
-  }
+    // Check if the blogId is valid
+    const isValidId = mongoose.isValidObjectId(blogId);
+    if (!isValidId) {
+      return res.status(400).json({
+        status: false,
+        message: "Invalid blogId",
+      });
+    }
 
-  // Check if the blog exists and is not deleted
-  const blog = await blogModel.findOne({ _id: blogId, isDeleted: false });
+    // Check if the blog exists and is not deleted
+    const blog = await blogModel.findOne({ _id: blogId, isDeleted: false });
 
-  if (!blog) {
-  return res.status(404).json({ 
-  status: false, message: "Blog not found" });
-  }
-  
-  // checking the decoded token's authorId and blog's authorId is same or not    
-  //:- checking authorization
-  if(req["x-api-key"].authorId!=blog.authorId) 
-  return res.status(403).send({
-  status:false , message: "unauthorized"})
+    if (!blog) {
+      return res.status(404).json({
+        status: false,
+        message: "Blog not found",
+      });
+    }
 
-  const { title, body, tags, subcategory } = req.body;
+    // checking the decoded token's authorId and blog's authorId is same or not
+    //:- checking authorization
+    if (req["x-api-key"].authorId != blog.authorId)
+      return res.status(403).send({
+        status: false,
+        message: "unauthorized",
+      });
 
-  //updating all fields based on conditions
+    const { title, body, tags, subcategory } = req.body;
 
-  blog.title = title || blog.title;
-  blog.body = body || blog.body;
+    /// handling edge case for tags and subcategory are not present or present as a string
 
-  // if (tags && tags.length > 0) {
-  // blog.tags.push(...tags);
-  // }
-  if (tags && tags.length > 0) {
-  tags.forEach(tag => {
-  if (!blog.tags.includes(tag)) {
-  blog.tags.push(tag);
-  }
-  });
-  }
+    if (typeof tags != Object) {
+      //here I am using Object for array(type)==object
+      tags = [tags];
+    }
+    if (typeof subcategory != Object) {
+      subcategory = [subcategory];
+    }
 
-  if (subcategory && subcategory.length > 0) {
-  subcategory.forEach(subcategories => {
-  if (!blog.subcategory.includes(subcategories)) {
-  blog.subcategory.push(subcategories);
-  }
-  });
-  }
-    
-  blog.isPublished = true;
-  blog.publishedAt = new Date();
+    //updating all fields based on conditions
 
-  const updatedBlog = await blog.save();
-  res.status(200).json({ 
-  status: true, message: "Blog updated", data: updatedBlog });
+    const updatedBlog = await blogModel.findByIdAndUpdate(
+      req.params.blogId,
+      {
+        $set: {
+          title,
+          body,
+          category,
+          isPublished: true,
+          publishedAt: new Date(),
+        },
+        $addToSet: {
+          tags: { $each: tags },
+          subcategory: { $each: subcategory },
+        },
+      },
+      { new: true }
+    );
+    res.status(200).json({
+      status: true,
+      message: "Blog updated",
+      data: updatedBlog,
+    });
   } catch (error) {
-  res.status(500).json({ 
-  status: false, message: error.message });
+    res.status(500).json({
+      status: false,
+      message: error.message,
+    });
   }
 };
 
 // ******************************************************************************* //
 
 const deleteBlog = async (req, res) => {
-try {
-const blogId = req.params.blogId;
+  try {
+    const blogId = req.params.blogId;
 
-// Check if the blogId is valid
-const isValidId = mongoose.isValidObjectId(blogId);
-if (!isValidId) {
-return res.status(400).json({ 
-status: false, message: "Invalid blogId" });
-}
+    // Check if the blogId is valid
+    const isValidId = mongoose.isValidObjectId(blogId);
+    if (!isValidId) {
+      return res.status(400).json({
+        status: false,
+        message: "Invalid blogId",
+      });
+    }
 
-// Check if the blogId exists and is not deleted
-const blog = await blogModel
-.findOne({ _id: blogId, isDeleted: false });
+    // Check if the blogId exists and is not deleted
+    const blog = await blogModel.findOne({ _id: blogId, isDeleted: false });
 
-if (!blog) {
-return res.status(404).json({ 
-status : false , message: "Blog not found" });
-}
+    if (!blog) {
+      return res.status(404).json({
+        status: false,
+        message: "Blog not found",
+      });
+    }
 
-// checking rights of author  for deletion
-if(blog.authorId!=req["x-api-key"].authorId)  
-return res.status(403).send({
-status : false , message : "unauthorized"})
+    // checking rights of author  for deletion
+    if (blog.authorId != req["x-api-key"].authorId)
+      return res.status(403).send({
+        status: false,
+        message: "unauthorized",
+      });
 
-blog.isDeleted = true;
-blog.deletedAt = new Date();
+    blog.isDeleted = true;
+    blog.deletedAt = new Date();
 
-const deleted = await blog.save();
-res.status(200).json({
-status: true,
-message: "successful deleted"
-});
-} catch (error) {
-res.status(500).json({
-status:false , message : error.message });
-}
+    const deleted = await blog.save();
+    res.status(200).json({
+      status: true,
+      message: "successful deleted",
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      message: error.message,
+    });
+  }
 };
 
 // ******************************************************************************* //
 
 const deleteBlogsByQuery = async (req, res) => {
   try {
-  const {authorId, category, tags, subcategory, unpublished} = req.query;
+    const { authorId, category, tags, subcategory, unpublished } = req.query;
 
-  // Check if no any query parameters are provided
-  if (Object.keys(req.query).length === 0) {
-  return res.status(400).json({ 
-  status: false, message: "No search parameters provided" });
-  }
+    // Check if no any query parameters are provided
+    if (Object.keys(req.query).length === 0) {
+      return res.status(400).json({
+        status: false,
+        message: "No search parameters provided",
+      });
+    }
 
-  const filters = { isDeleted: false };
+    const filters = { isDeleted: false };
 
-  // Apply filters based on the query parameters
-  if (category) {
-  filters.category = category;
-  }
+    // Apply filters based on the query parameters
+    if (category) {
+      filters.category = category;
+    }
 
-  if (authorId) {
-  const isValidId = mongoose.isValidObjectId(authorId);
-  if (!isValidId) {
-  return res.status(400).json({ 
-  status: false, message: "Invalid authorId"});
-  }
+    if (authorId) {
+      const isValidId = mongoose.isValidObjectId(authorId);
+      if (!isValidId) {
+        return res.status(400).json({
+          status: false,
+          message: "Invalid authorId",
+        });
+      }
 
-  filters.authorId = authorId;
-  }
+      filters.authorId = authorId;
+    }
 
-  if (tags) {
-  filters.tags = { $in: tags.split(",") };
-  }
+    if (tags) {
+      filters.tags = { $in: tags.split(",") };
+    }
 
-  if (subcategory) {
-  filters.subcategory = { $in: subcategory.split(",") };
-  }
+    if (subcategory) {
+      filters.subcategory = { $in: subcategory.split(",") };
+    }
 
-  if (unpublished === "true") {          
-  filters.isPublished = false;
-  }
+    if (unpublished === "true") {
+      filters.isPublished = false;
+    }
 
-  const blogData = await blogModel.findOne(filters)
-  if(!blogData) return res.status(404)
-  .json({status: false, msg: "blog not exist"})
-       
-  if(blogData.authorId!=req["x-api-key"].authorId)  
-  return res.status(403).send({
-  status : false , message : "unauthorized"})
-    
-  blogData.isDeleted = true;
-  blogData.deletedAt = new Date()
+    const blogData = await blogModel.findOne(filters);
+    if (!blogData)
+      return res.status(404).json({ status: false, msg: "blog not exist" });
 
-  const saved = blogData.save()
+    if (blogData.authorId != req["x-api-key"].authorId)
+      return res.status(403).send({
+        status: false,
+        message: "unauthorized",
+      });
 
-  res.status(200).json({ 
-  status: true, message: "successful deleted" });
+    blogData.isDeleted = true;
+    blogData.deletedAt = new Date();
+
+    const saved = blogData.save();
+
+    res.status(200).json({
+      status: true,
+      message: "successful deleted",
+    });
   } catch (error) {
-  res.status(500).json({ 
-  status: false, message: error.message });
+    res.status(500).json({
+      status: false,
+      message: error.message,
+    });
   }
 };
 
-
 module.exports = {
-createBlog,
-getAllBlogs,
-updateBlog,
-deleteBlog,
-deleteBlogsByQuery
+  createBlog,
+  getAllBlogs,
+  updateBlog,
+  deleteBlog,
+  deleteBlogsByQuery,
 };
