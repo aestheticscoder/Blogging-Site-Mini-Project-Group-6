@@ -95,16 +95,18 @@ const updateBlog = async (req, res) => {
   return res.status(403).send({
   status:false , message: "unauthorized"})
 
-  const { title, body, tags, subcategory } = req.body;
+  let { title, body, tags, subcategory } = req.body;
 
   //updating all fields based on conditions
 
   blog.title = title || blog.title;
   blog.body = body || blog.body;
 
-  // if (tags && tags.length > 0) {
-  // blog.tags.push(...tags);
-  // }
+ 
+        if(typeof tags != Object){
+          tags = [tags]
+        }
+
   if (tags && tags.length > 0) {
   tags.forEach(tag => {
   if (!blog.tags.includes(tag)) {
@@ -112,7 +114,11 @@ const updateBlog = async (req, res) => {
   }
   });
   }
-
+        
+  if(typeof subcategory !=Object){
+        subcategory = [subcategory]
+  }
+   
   if (subcategory && subcategory.length > 0) {
   subcategory.forEach(subcategories => {
   if (!blog.subcategory.includes(subcategories)) {
@@ -215,7 +221,7 @@ const deleteBlogsByQuery = async (req, res) => {
   filters.isPublished = false;
   }
 
-  const blogData = await blogModel.findOne(filters)
+  const blogData = await blogModel.findOne(filters)      //find   --> array --->filter(ele=>["x-api-key"].authorId)
   if(!blogData) return res.status(404)
   .json({status: false, msg: "blog not exist"})
        

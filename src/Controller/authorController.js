@@ -6,9 +6,17 @@ const createAuthor = async (req, res) => {
   try {
   let { fname, lname, title, email, password } = req.body;
 
-  if(!fname || !lname ||  !email || !password) 
+  if(!fname || !lname || !title|| !email || !password) 
   return res.status(400).send({
   status : false , message : "missing mandatory fields"})
+  
+     title =  title.trim()
+   const vab = ['Mr', 'Mrs', 'Miss']
+  if(!vab.includes(title)) return res.status(400).send({status : false , message : "please choose correct title"})
+
+  if(password.length<6||password.length>15){
+    return res.status(400).json({message:"Please provide strong password"});
+}
 
   email = email.toLowerCase()
      
